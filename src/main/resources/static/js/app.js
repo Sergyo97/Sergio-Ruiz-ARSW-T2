@@ -1,6 +1,6 @@
 app = (function () {
 	var map;
-	var marker;
+	var markers;
 	return {
 		initMap: function () {
 			map = new google.maps.Map(document.getElementById('map'), {
@@ -10,20 +10,39 @@ app = (function () {
 			});
 		},
 		getAirportCity: function () {
-			var city = $('#input').val();
+			var city = $('#city').val();
 			console.log(city)
-			return airportApp.getAirportByName(city, function (city) {
-				console.log(city);
-				var x = JSON.parse(city);
-				var table = $("#tableInfo");
-				$("#tableInfo > tr").remove();
-				table.append('<tr>' +
-					"<td>" + x.main.airportId + "</td>" +
-					"<td>" + x.main.name + "</td>" +
-					"<td>" + x.main.city + "</td>" +
-					"<td>" + x.main.cityId + "</td>" +
-					"</tr>");
+			axios.get("/airport", {
+				params: {
+					city: city
+				}
 			})
+				.then(response => {
+					mydata = response.data;
+					console.log(mydata)
+					$("#tableInfo tbody").empty();
+					mydata.forEach(airport => {
+						$('#tableInfo tbody').append(`
+            <tr>
+                <td>` + airport.airportId + `</td>    
+                <td>` + airport.name + `</td>
+                <td>` + airport.city + `</td>
+                <td>` + airport.cityId + `</td>
+            </tr>
+		`)
+						var latitud = airport.location.latitude
+						var longitud = airport.location.longitude
+						var cambiaaaa = new google.maps.LatLng(latitud, longitud);
+						map.setCenter(cambiaaaa);
+						var marker = new google.maps.Marker({
+							position: cambiaaaa
+						});
+						marker.setMap(map);
+					});
+				})
+				.catch(function (error) {
+					console.log(error);
+				})
 		}
 	}
 })();
